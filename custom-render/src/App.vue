@@ -15,4 +15,5 @@ const setName = (n) => {
   pos.value[1] += 20;
   count.value += 2;
 };
+
 </script>
