@@ -7,10 +7,27 @@ const data = {
 };
 
 let activeEffect;
+const effectStack = []
 function effect(fn) {
-  activeEffect = fn;
-  // 立即执行
-  fn();
+  const effectFn = () => {
+    cleanup(effectFn);
+    activeEffect = effectFn;
+    effectStack.push(effectFn)
+    fn();
+    effectStack.pop();
+    activeEffect = effectStack[effectStack.length - 1]
+  };
+
+  effectFn.deps = [];
+  effectFn();
+}
+
+function cleanup(effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    const deps = effectFn.deps[i];
+    deps.delete(effectFn);
+  }
+  effectFn.deps.length = 0;
 }
 
 const reactiveMap = new WeakMap();
@@ -27,6 +44,8 @@ const obj = new Proxy(data, {
       depsMap.set(key, (deps = new Set()));
     }
     deps.add(activeEffect);
+
+    activeEffect.deps.push(deps);
     // console.log("deps", deps);
     return Reflect.get(target, key, receiver);
   },
@@ -40,7 +59,10 @@ const obj = new Proxy(data, {
     }
     let deps = depsMap.get(key) ?? new Set();
 
-    deps.forEach((dep) => {
+    const effectsToRun = new Set(deps)
+
+
+    effectsToRun.forEach((dep) => {
       dep();
     });
   },
@@ -62,8 +84,19 @@ const obj = new Proxy(data, {
 // });
 // obj.a = 123;
 
+// effect(() => {
+//   console.log(obj.a ? obj.b : "nothing");
+// });
+// obj.a = undefined;
+// obj.b = 3;
+
+// 嵌套
 effect(() => {
-  console.log(obj.a ? obj.b : 'nothing');
+  console.log('effect1');
+  effect(() => {
+      console.log('effect2');
+      obj.b;
+  });
+  obj.a;
 });
-obj.a = undefined;
-obj.b = 3;
+obj.a = 3;
