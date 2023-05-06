@@ -20,3 +20,11 @@ v-dom => custom render => 展示到页面上
 5. render 函数执行返回 vNode
 6. mount 阶段，将vNode 渲染到页面
 7. patch 阶段，更新后，对比新旧 vNode，找出差异更新到页面上
+
+### complier
+
+1. 代码 
+2. token 
+3. AST 
+4. transform（语义分析和优化） 
+5. generator
